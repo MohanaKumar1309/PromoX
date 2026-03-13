@@ -31,3 +31,26 @@ build/
 
 ### VS Code ###
 .vscode/
+# Build folders
+target/
+bin/
+out/
+.gradle/
+build/
+
+# Eclipse & Spring Tools Suite
+.settings/
+.classpath
+.project
+.factorypath
+.metadata/
+
+# IDE settings
+.idea/
+*.iml
+.vscode/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
