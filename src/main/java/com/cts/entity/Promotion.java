@@ -1,7 +1,7 @@
 package com.cts.entity;
 
-
-
+import com.cts.promoengine.common.enums.ApprovalStatus;
+import com.cts.promoengine.common.enums.DiscountType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,38 +12,34 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import com.cts.enums.ApprovalStatus;
-import com.cts.enums.DiscountType;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "campaigns")
-public class Campaign {
+@Table(name = "promotions")
+public class Promotion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long campaignId;
+    private Long promotionId;
 
-    private String campaignName;
+    private String name;
     private String description;
 
     @Enumerated(EnumType.STRING)
     private ApprovalStatus status;
 
-    private Integer minAge;
-    private Integer maxAge;
-
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
 
-    private BigDecimal amount;
+    private BigDecimal discountValue;
+    private BigDecimal minAmount;
+    private Integer minQuantity;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String type;
     private Long createdBy;
 
     @PrePersist
