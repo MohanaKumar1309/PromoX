@@ -1,7 +1,7 @@
 package com.cts.entity;
 
-import com.cts.promoengine.common.enums.ApprovalStatus;
-import com.cts.promoengine.common.enums.DiscountType;
+import com.cts.enums.ApprovalStatus;
+import com.cts.enums.DiscountType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
