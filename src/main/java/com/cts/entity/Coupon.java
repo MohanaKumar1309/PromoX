@@ -7,6 +7,9 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.cts.enums.ApprovalStatus;
+import com.cts.enums.DiscountType;
+
 @Getter
 @Setter
 @Entity
