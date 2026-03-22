@@ -1,9 +1,10 @@
 package com.cts.entity;
 
+import com.cts.enums.ApprovalStatus;
+import com.cts.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,13 +23,14 @@ public class Coupon {
     private String couponName;
     private String description;
 
-    @Value("Pending")
-    private String  status;
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus status;
+
     private Integer usageLimit;
     private Integer usageCount;
 
-
-    private String discountType;
+    @Enumerated(EnumType.STRING)
+    private DiscountType discountType;
 
     private BigDecimal amount;
     private BigDecimal minCartValue;
@@ -37,13 +39,13 @@ public class Coupon {
     private LocalDate endDate;
     private Long createdBy;
 
-//    @PrePersist
-//    void prePersist() {
-//        if (this.status == null) {
-//            this.status = ApprovalStatus.PENDING;
-//        }
-//        if (this.usageCount == null) {
-//            this.usageCount = 0;
-//        }
-//    }
+    @PrePersist
+    void prePersist() {
+        if (this.status == null) {
+            this.status = ApprovalStatus.PENDING;
+        }
+        if (this.usageCount == null) {
+            this.usageCount = 0;
+        }
+    }
 }
