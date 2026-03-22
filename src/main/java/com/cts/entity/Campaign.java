@@ -1,43 +1,47 @@
 package com.cts.entity;
 
-import com.cts.enums.ApprovalStatus;
-import com.cts.enums.DiscountType;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.cts.enums.ApprovalStatus;
 import com.cts.enums.DiscountType;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Getter
 @Setter
 @Entity
-@Table(name = "coupons")
-public class Coupon {
+@Table(name = "campaigns")
+public class Campaign {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long couponId;
+    private Long campaignId;
 
-    private String couponCode;
-    private String couponName;
+    private String campaignName;
     private String description;
 
     @Enumerated(EnumType.STRING)
     private ApprovalStatus status;
 
-    private Integer usageLimit;
-    private Integer usageCount;
+    private Integer minAge;
+    private Integer maxAge;
 
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
 
     private BigDecimal amount;
-    private BigDecimal minCartValue;
-    private BigDecimal maxDiscount;
     private LocalDate startDate;
     private LocalDate endDate;
     private Long createdBy;
@@ -46,9 +50,6 @@ public class Coupon {
     void prePersist() {
         if (this.status == null) {
             this.status = ApprovalStatus.PENDING;
-        }
-        if (this.usageCount == null) {
-            this.usageCount = 0;
         }
     }
 }
