@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 @Builder
-public class CheckoutResponse {
+public class CheckoutGetDto {
     private Long orderId;
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
