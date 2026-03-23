@@ -1,5 +1,6 @@
 package com.cts.entity;
 
+import com.cts.enums.Role;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -9,11 +10,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "customers")
-public class Customer {
+@Table(name = "internal_users")
+public class InternalUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long custId;
+    private Long userId;
 
     private String name;
 
@@ -24,11 +25,16 @@ public class Customer {
     private String passwordHash;
 
     private String phone;
-    private Integer age;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
     void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

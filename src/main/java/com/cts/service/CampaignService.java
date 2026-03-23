@@ -1,6 +1,5 @@
 package com.cts.service;
 
-package com.cts.promoengine.service;
 
 import com.cts.dto.CampaignGetDto;
 import com.cts.dto.CreateCampaignRequest;

@@ -2,7 +2,10 @@ package com.cts.security;
 
 
 import com.cts.entity.Customer;
+import com.cts.entity.InternalUser;
 import com.cts.exception.ResourceNotFoundException;
+import com.cts.repository.CustomerRepository;
+import com.cts.repository.InternalUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
