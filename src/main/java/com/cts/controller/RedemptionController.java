@@ -4,7 +4,7 @@ package com.cts.controller;
 import com.cts.service.RedemptionService;
 import com.cts.common.ApiResponse;
 import com.cts.dto.CheckoutRequest;
-import com.cts.dto.CheckoutResponse;
+import com.cts.dto.CheckoutGetDto;
 import com.cts.security.AuthContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +26,9 @@ public class RedemptionController {
 
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(@Valid @RequestBody CheckoutRequest request,
-                                                                  Authentication authentication) {
-        return ResponseEntity.ok(ApiResponse.<CheckoutResponse>builder()
+    public ResponseEntity<ApiResponse<CheckoutGetDto>> checkout(@Valid @RequestBody CheckoutRequest request,
+                                                                Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<CheckoutGetDto>builder()
                 .success(true)
                 .message("Checkout successful")
                 .data(redemptionService.checkout(authContextService.currentCustomer(authentication), request))

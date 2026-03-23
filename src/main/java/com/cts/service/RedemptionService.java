@@ -1,19 +1,35 @@
 package com.cts.service;
 
-import com.cts.dto.*;
-import com.cts.entity.*;
+import com.cts.dto.CheckoutGetDto;
+import com.cts.dto.CheckoutRequest;
+import com.cts.entity.Campaign;
+import com.cts.entity.Coupon;
+import com.cts.entity.Customer;
+import com.cts.entity.Order;
+import com.cts.entity.Product;
+import com.cts.entity.Promotion;
+import com.cts.entity.Redemption;
 import com.cts.enums.DiscountType;
 import com.cts.enums.ReferenceType;
 import com.cts.exception.BusinessException;
 import com.cts.exception.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
+import com.cts.repository.CampaignCategoryRepository;
+import com.cts.repository.CampaignProductRepository;
+import com.cts.repository.OrderRepository;
+import com.cts.repository.ProductRepository;
+import com.cts.repository.PromotionCategoryRepository;
+import com.cts.repository.PromotionProductRepository;
+import com.cts.repository.RedemptionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-import com.cts.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +47,7 @@ public class RedemptionService {
     private final RedemptionRepository redemptionRepository;
     private final AnalyticsService analyticsService;
 
-    public CheckoutResponse checkout(Customer customer, CheckoutRequest request) {
+    public CheckoutGetDto checkout(Customer customer, CheckoutRequest request) {
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal discount = BigDecimal.ZERO;
 
@@ -48,47 +64,56 @@ public class RedemptionService {
         }
 
         List<Long> appliedPromotions = new ArrayList<>();
-        for (Promotion promotion : promotionService.activePromotions()) {
+        for (Promotion promotion : promotionService.getActivePromotionEntities()) {
             boolean applies = false;
-            Set<Long> pIds = promotionProductRepository.findByPromotion_PromotionId(promotion.getPromotionId()).stream()
-                    .map(pp -> pp.getProduct().getProductId()).collect(Collectors.toSet());
-            Set<Long> cIds = promotionCategoryRepository.findByPromotion_PromotionId(promotion.getPromotionId()).stream()
-                    .map(pc -> pc.getCategory().getCategoryId()).collect(Collectors.toSet());
+            Set<Long> promotionProductIds = promotionProductRepository.findByPromotion_PromotionId(promotion.getPromotionId())
+                    .stream()
+                    .map(link -> link.getProduct().getProductId())
+                    .collect(Collectors.toSet());
+            Set<Long> promotionCategoryIds = promotionCategoryRepository.findByPromotion_PromotionId(promotion.getPromotionId())
+                    .stream()
+                    .map(link -> link.getCategory().getCategoryId())
+                    .collect(Collectors.toSet());
 
-            BigDecimal promoBase = BigDecimal.ZERO;
-            int totalQty = 0;
+            BigDecimal promotionBase = BigDecimal.ZERO;
+            int totalQuantity = 0;
             for (Long productId : qtyByProduct.keySet()) {
                 Product product = products.get(productId);
-                if (pIds.contains(productId) || cIds.contains(product.getCategory().getCategoryId())) {
+                if (promotionProductIds.contains(productId)
+                        || promotionCategoryIds.contains(product.getCategory().getCategoryId())) {
                     applies = true;
-                    int q = qtyByProduct.get(productId);
-                    totalQty += q;
-                    promoBase = promoBase.add(product.getPrice().multiply(BigDecimal.valueOf(q)));
+                    int quantity = qtyByProduct.get(productId);
+                    totalQuantity += quantity;
+                    promotionBase = promotionBase.add(product.getPrice().multiply(BigDecimal.valueOf(quantity)));
                 }
             }
 
             if (!applies) {
                 continue;
             }
-            if (promotion.getMinQuantity() != null && totalQty < promotion.getMinQuantity()) {
+            if (promotion.getMinQuantity() != null && totalQuantity < promotion.getMinQuantity()) {
                 continue;
             }
-            if (promotion.getMinAmount() != null && promoBase.compareTo(promotion.getMinAmount()) < 0) {
+            if (promotion.getMinAmount() != null && promotionBase.compareTo(promotion.getMinAmount()) < 0) {
                 continue;
             }
 
-            discount = discount.add(applyDiscount(promoBase, promotion.getDiscountType(), promotion.getDiscountValue(), null));
+            discount = discount.add(applyDiscount(promotionBase, promotion.getDiscountType(), promotion.getDiscountValue(), null));
             appliedPromotions.add(promotion.getPromotionId());
-            analyticsService.logRedeem(customer, ReferenceType.PROMOTION, promotion.getPromotionId(), promoBase);
+            analyticsService.logRedeem(customer, ReferenceType.PROMOTION, promotion.getPromotionId(), promotionBase);
         }
 
         List<Long> appliedCampaigns = new ArrayList<>();
-        for (Campaign campaign : campaignService.activeByAge(customer.getAge())) {
+        for (Campaign campaign : campaignService.getActiveCampaignEntities(customer.getAge())) {
             boolean applies = false;
             Set<Long> mappedProducts = campaignProductRepository.findByCampaign_CampaignId(campaign.getCampaignId())
-                    .stream().map(cp -> cp.getProduct().getProductId()).collect(Collectors.toSet());
+                    .stream()
+                    .map(link -> link.getProduct().getProductId())
+                    .collect(Collectors.toSet());
             Set<Long> mappedCategories = campaignCategoryRepository.findByCampaign_CampaignId(campaign.getCampaignId())
-                    .stream().map(cc -> cc.getCategory().getCategoryId()).collect(Collectors.toSet());
+                    .stream()
+                    .map(link -> link.getCategory().getCategoryId())
+                    .collect(Collectors.toSet());
 
             for (Long productId : qtyByProduct.keySet()) {
                 Product product = products.get(productId);
@@ -109,7 +134,7 @@ public class RedemptionService {
         String appliedCoupon = null;
         if (request.getCouponCode() != null && !request.getCouponCode().isBlank()) {
             Coupon coupon = couponService.getByCode(request.getCouponCode());
-            if (!couponService.activeCoupons().stream().anyMatch(c -> c.getCouponId().equals(coupon.getCouponId()))) {
+            if (couponService.getActiveCouponEntities().stream().noneMatch(activeCoupon -> activeCoupon.getCouponId().equals(coupon.getCouponId()))) {
                 throw new BusinessException("Coupon is not active or approved");
             }
             if (total.compareTo(coupon.getMinCartValue()) < 0) {
@@ -142,7 +167,7 @@ public class RedemptionService {
         redemption.setFinalAmount(finalAmount);
         redemptionRepository.save(redemption);
 
-        return CheckoutResponse.builder()
+        return CheckoutGetDto.builder()
                 .orderId(savedOrder.getOrderId())
                 .totalAmount(total.setScale(2, RoundingMode.HALF_UP))
                 .discountAmount(discount.setScale(2, RoundingMode.HALF_UP))

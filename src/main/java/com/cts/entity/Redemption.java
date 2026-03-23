@@ -6,10 +6,11 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
-@Table(name = "promotions")
+@Table(name = "promotions") // Note: Double-check if the table should be 'promotions' or 'redemptions'
 public class Redemption {
 
     @Id
@@ -19,6 +20,7 @@ public class Redemption {
     @ManyToOne
     private Customer customer;
 
+    // Ensure the Order entity exists in your project
     @ManyToOne
     private Order order;
 
