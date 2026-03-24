@@ -37,12 +37,4 @@ public class AuthController {
                 .build());
     }
 
-    @GetMapping("/oauth2/success")
-    public ResponseEntity<ApiResponse<String>> oauth2Success() {
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Google OAuth login success")
-                .data("Use /oauth2/authorization/google to initiate OAuth login")
-                .build());
-    }
 }
