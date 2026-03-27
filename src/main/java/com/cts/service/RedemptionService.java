@@ -66,6 +66,8 @@ public class RedemptionService {
         List<Long> appliedPromotions = new ArrayList<>();
         for (Promotion promotion : promotionService.getActivePromotionEntities()) {
             boolean applies = false;
+
+
             Set<Long> promotionProductIds = promotionProductRepository.findByPromotion_PromotionId(promotion.getPromotionId())
                     .stream()
                     .map(link -> link.getProduct().getProductId())
