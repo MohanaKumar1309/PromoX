@@ -22,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //Return user details
         InternalUser internalUser = internalUserRepository.findByEmail(username).orElse(null);
         if (internalUser != null) {
             return User.withUsername(internalUser.getEmail())
