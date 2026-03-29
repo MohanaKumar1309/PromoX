@@ -17,9 +17,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("SME-Lend API")
+                        .title("PromoEngieneX API")
                         .version("1.0")
-                        .description("SME-Lend Micro Financing Backend APIs"))
+                        .description("Promotion and Offer Management Backend APIs"))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
                         .addSecuritySchemes(
