@@ -13,6 +13,8 @@ import com.cts.repository.CustomerRepository;
 import com.cts.repository.InternalUserRepository;
 import com.cts.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +26,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
@@ -33,18 +37,41 @@ public class AuthService {
     private final AuditLogService auditLogService;
 
     public AuthGetDto login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-        String role = userDetails.getAuthorities().stream().findFirst()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
-                .orElse(Role.CUSTOMER.name());
-        String token = jwtService.generateToken(userDetails, Map.of("role", role));
-        return AuthGetDto.builder()
-                .token(token)
-                .email(request.getEmail())
-                .role(Role.valueOf(role))
-                .build();
+        try {
+            log.info("Login attempt for email: {}", request.getEmail());
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+            log.info("Authentication successful for: {}", request.getEmail());
+            
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+            String role = userDetails.getAuthorities().stream().findFirst()
+                    .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                    .orElse(Role.CUSTOMER.name());
+            log.info("User role: {} for email: {}", role, request.getEmail());
+            
+            String token = jwtService.generateToken(userDetails, Map.of("role", role));
+            log.info("Token generated successfully for: {}", request.getEmail());
+            
+            // Get user details to include in response
+            InternalUser internalUser = internalUserRepository.findByEmail(request.getEmail()).orElse(null);
+            Customer customer = internalUser == null ? customerRepository.findByEmail(request.getEmail()).orElse(null) : null;
+            
+            Long userId = internalUser != null ? internalUser.getUserId() : (customer != null ? customer.getCustId() : null);
+            String name = internalUser != null ? internalUser.getName() : (customer != null ? customer.getName() : "");
+            Integer age = customer != null ? customer.getAge() : null;
+
+            return AuthGetDto.builder()
+                    .userId(userId)
+                    .token(token)
+                    .email(request.getEmail())
+                    .name(name)
+                    .role(Role.valueOf(role))
+                    .age(age)
+                    .build();
+        } catch (Exception e) {
+            log.error("Login failed for email: {}", request.getEmail(), e);
+            throw e;
+        }
     }
 
     public AuthGetDto customerSignup(SignupRequest request) {
@@ -59,14 +86,17 @@ public class AuthService {
         customer.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         customer.setPhone(request.getPhone());
         customer.setAge(request.getAge());
-        customerRepository.save(customer);
+        Customer savedCustomer = customerRepository.save(customer);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String token = jwtService.generateToken(userDetails, Map.of("role", Role.CUSTOMER.name()));
         return AuthGetDto.builder()
+                .userId(savedCustomer.getCustId())
                 .token(token)
                 .email(request.getEmail())
+                .name(savedCustomer.getName())
                 .role(Role.CUSTOMER)
+                .age(savedCustomer.getAge())
                 .build();
     }
 

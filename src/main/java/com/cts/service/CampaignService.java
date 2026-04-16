@@ -94,7 +94,7 @@ public class CampaignService {
         return campaignRepository.findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                         ApprovalStatus.APPROVED, today, today)
                 .stream()
-                .filter(campaign -> age >= campaign.getMinAge() && age <= campaign.getMaxAge())
+                .filter(campaign -> age != null && age >= campaign.getMinAge() && age <= campaign.getMaxAge())
                 .toList();
     }
 

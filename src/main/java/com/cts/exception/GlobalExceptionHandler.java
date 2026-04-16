@@ -47,7 +47,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleGeneric(Exception ex) {
         Map<String, Object> data = new HashMap<>();
         data.put("timestamp", LocalDateTime.now());
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", data);
+        data.put("errorDetails", ex.getMessage());
+        data.put("errorType", ex.getClass().getSimpleName());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred: " + ex.getMessage(), data);
     }
 
     private ResponseEntity<ApiResponse<Object>> build(HttpStatus status, String message, Object data) {

@@ -6,6 +6,8 @@ import com.cts.dto.SignupRequest;
 import com.cts.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,15 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthGetDto>> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(ApiResponse.<AuthGetDto>builder()
-                .success(true)
-                .message("Login successful")
-                .data(authService.login(request))
-                .build());
+        log.info("Login endpoint called with email: {}", request.getEmail());
+        try {
+            AuthGetDto result = authService.login(request);
+            log.info("Login successful for: {}", request.getEmail());
+            return ResponseEntity.ok(ApiResponse.<AuthGetDto>builder()
+                    .success(true)
+                    .message("Login successful")
+                    .data(result)
+                    .build());
+        } catch (Exception e) {
+            log.error("Login endpoint exception for email: {}", request.getEmail(), e);
+            throw e;
+        }
     }
 
     @PostMapping("/customer/signup")

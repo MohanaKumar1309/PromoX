@@ -7,12 +7,16 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -21,13 +25,21 @@ public class JwtService {
     private long jwtExpirationMs;
 
     public String generateToken(UserDetails userDetails, Map<String, Object> claims) {
-        return Jwts.builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(signingKey())
-                .compact();
+        log.debug("Generating JWT token for user: {}", userDetails.getUsername());
+        try {
+            String token = Jwts.builder()
+                    .claims(claims)
+                    .subject(userDetails.getUsername())
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                    .signWith(signingKey())
+                    .compact();
+            log.debug("JWT token generated successfully");
+            return token;
+        } catch (Exception e) {
+            log.error("Error generating JWT token", e);
+            throw e;
+        }
     }
 
     public String extractUsername(String token) {
@@ -50,7 +62,15 @@ public class JwtService {
     }
 
     private SecretKey signingKey() {
-        byte[] keyBytes = jwtSecret.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+
+            byte[] decodedKey = Decoders.BASE64.decode(jwtSecret);
+            SecretKey key = Keys.hmacShaKeyFor(decodedKey);
+            log.debug("Signing key created successfully");
+            return key;
+        } catch (Exception e) {
+            log.error("Error creating signing key", e);
+            throw new RuntimeException("Failed to create signing key", e);
+        }
     }
 }

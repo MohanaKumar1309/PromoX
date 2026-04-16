@@ -7,7 +7,10 @@ import lombok.Data;
 @Data
 @Builder
 public class AuthGetDto {
+    private Long userId;
     private String token;
     private String email;
+    private String name;
     private Role role;
+    private Integer age;
 }

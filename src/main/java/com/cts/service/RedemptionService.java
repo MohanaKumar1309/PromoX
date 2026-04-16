@@ -47,6 +47,7 @@ public class RedemptionService {
     private final RedemptionRepository redemptionRepository;
     private final AnalyticsService analyticsService;
 
+    @org.springframework.transaction.annotation.Transactional
     public CheckoutGetDto checkout(Customer customer, CheckoutRequest request) {
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal discount = BigDecimal.ZERO;
@@ -100,9 +101,10 @@ public class RedemptionService {
                 continue;
             }
 
-            discount = discount.add(applyDiscount(promotionBase, promotion.getDiscountType(), promotion.getDiscountValue(), null));
+            BigDecimal promoDiscount = applyDiscount(promotionBase, promotion.getDiscountType(), promotion.getDiscountValue(), null);
+            discount = discount.add(promoDiscount);
             appliedPromotions.add(promotion.getPromotionId());
-            analyticsService.logRedeem(customer, ReferenceType.PROMOTION, promotion.getPromotionId(), promotionBase);
+            analyticsService.logRedeem(customer, ReferenceType.PROMOTION, promotion.getPromotionId(), promoDiscount);
         }
 
         List<Long> appliedCampaigns = new ArrayList<>();
@@ -127,9 +129,10 @@ public class RedemptionService {
             }
 
             if (applies) {
-                discount = discount.add(applyDiscount(total, campaign.getDiscountType(), campaign.getAmount(), null));
+                BigDecimal campaignDiscount = applyDiscount(total, campaign.getDiscountType(), campaign.getAmount(), null);
+                discount = discount.add(campaignDiscount);
                 appliedCampaigns.add(campaign.getCampaignId());
-                analyticsService.logRedeem(customer, ReferenceType.CAMPAIGN, campaign.getCampaignId(), total);
+                analyticsService.logRedeem(customer, ReferenceType.CAMPAIGN, campaign.getCampaignId(), campaignDiscount);
             }
         }
 
@@ -142,10 +145,11 @@ public class RedemptionService {
             if (total.compareTo(coupon.getMinCartValue()) < 0) {
                 throw new BusinessException("Min cart value not reached for coupon");
             }
-            discount = discount.add(applyDiscount(total, coupon.getDiscountType(), coupon.getAmount(), coupon.getMaxDiscount()));
+            BigDecimal couponDiscount = applyDiscount(total, coupon.getDiscountType(), coupon.getAmount(), coupon.getMaxDiscount());
+            discount = discount.add(couponDiscount);
             couponService.incrementUsage(coupon);
             appliedCoupon = coupon.getCouponCode();
-            analyticsService.logRedeem(customer, ReferenceType.COUPON, coupon.getCouponId(), total);
+            analyticsService.logRedeem(customer, ReferenceType.COUPON, coupon.getCouponId(), couponDiscount);
         }
 
         if (discount.compareTo(total) > 0) {
