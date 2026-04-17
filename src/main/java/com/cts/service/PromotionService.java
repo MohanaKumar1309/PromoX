@@ -40,7 +40,6 @@ public class PromotionService {
         promotion.setDescription(request.getDescription());
         promotion.setDiscountType(request.getDiscountType());
         promotion.setDiscountValue(request.getDiscountValue());
-        promotion.setMinAmount(request.getMinAmount());
         promotion.setMinQuantity(request.getMinQuantity());
         promotion.setStartDate(request.getStartDate());
         promotion.setEndDate(request.getEndDate());
@@ -126,7 +125,6 @@ public class PromotionService {
                 .status(promotion.getStatus())
                 .discountType(promotion.getDiscountType())
                 .discountValue(promotion.getDiscountValue())
-                .minAmount(promotion.getMinAmount())
                 .minQuantity(promotion.getMinQuantity())
                 .startDate(promotion.getStartDate())
                 .endDate(promotion.getEndDate())

@@ -5,16 +5,20 @@ import com.cts.service.RedemptionService;
 import com.cts.common.ApiResponse;
 import com.cts.dto.CheckoutRequest;
 import com.cts.dto.CheckoutGetDto;
+import com.cts.dto.OrderHistoryDto;
 import com.cts.security.AuthContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/redemptions")
@@ -32,6 +36,16 @@ public class RedemptionController {
                 .success(true)
                 .message("Checkout successful")
                 .data(redemptionService.checkout(authContextService.currentCustomer(authentication), request))
+                .build());
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @GetMapping("/my-orders")
+    public ResponseEntity<ApiResponse<List<OrderHistoryDto>>> myOrders(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<List<OrderHistoryDto>>builder()
+                .success(true)
+                .message("Order history fetched")
+                .data(redemptionService.getOrderHistory(authContextService.currentCustomer(authentication)))
                 .build());
     }
 }

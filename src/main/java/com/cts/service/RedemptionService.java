@@ -2,6 +2,7 @@ package com.cts.service;
 
 import com.cts.dto.CheckoutGetDto;
 import com.cts.dto.CheckoutRequest;
+import com.cts.dto.OrderHistoryDto;
 import com.cts.entity.Campaign;
 import com.cts.entity.Coupon;
 import com.cts.entity.Customer;
@@ -97,9 +98,6 @@ public class RedemptionService {
             if (promotion.getMinQuantity() != null && totalQuantity < promotion.getMinQuantity()) {
                 continue;
             }
-            if (promotion.getMinAmount() != null && promotionBase.compareTo(promotion.getMinAmount()) < 0) {
-                continue;
-            }
 
             BigDecimal promoDiscount = applyDiscount(promotionBase, promotion.getDiscountType(), promotion.getDiscountValue(), null);
             discount = discount.add(promoDiscount);
@@ -182,6 +180,22 @@ public class RedemptionService {
                 .appliedCampaigns(appliedCampaigns.toString())
                 .appliedCoupon(appliedCoupon)
                 .build();
+    }
+
+    public List<OrderHistoryDto> getOrderHistory(Customer customer) {
+        return redemptionRepository.findByCustomer_CustId(customer.getCustId()).stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .map(r -> OrderHistoryDto.builder()
+                        .orderId(r.getOrder() != null ? r.getOrder().getOrderId() : null)
+                        .totalAmount(r.getFinalAmount().add(r.getDiscountAmount()))
+                        .discountAmount(r.getDiscountAmount())
+                        .finalAmount(r.getFinalAmount())
+                        .appliedPromotions(r.getPromotionIds())
+                        .appliedCampaigns(r.getCampaignIds())
+                        .appliedCoupon(r.getCouponCode())
+                        .createdAt(r.getCreatedAt())
+                        .build())
+                .toList();
     }
 
     private BigDecimal applyDiscount(BigDecimal base, DiscountType type, BigDecimal value, BigDecimal cap) {

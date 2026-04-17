@@ -35,7 +35,6 @@ public class Promotion {
     private DiscountType discountType;
 
     private BigDecimal discountValue;
-    private BigDecimal minAmount;
     private Integer minQuantity;
     private LocalDate startDate;
     private LocalDate endDate;

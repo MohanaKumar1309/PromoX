@@ -20,7 +20,6 @@ public class CreatePromotionRequest {
     @NotNull
     private BigDecimal discountValue;
 
-    private BigDecimal minAmount;
     private Integer minQuantity;
 
     @NotNull
