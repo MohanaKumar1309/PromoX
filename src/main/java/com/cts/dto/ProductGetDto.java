@@ -15,4 +15,5 @@ public class ProductGetDto {
     private String sku;
     private BigDecimal price;
     private String imageUrl;
+    private Integer stockQuantity;
 }

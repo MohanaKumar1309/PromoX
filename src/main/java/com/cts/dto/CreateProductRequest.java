@@ -22,4 +22,6 @@ public class CreateProductRequest {
     private BigDecimal price;
 
     private String imageUrl;
+
+    private Integer stockQuantity;
 }

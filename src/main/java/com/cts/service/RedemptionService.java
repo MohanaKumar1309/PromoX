@@ -60,6 +60,11 @@ public class RedemptionService {
             Product product = productRepository.findById(line.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
             int qty = line.getQuantity() == null || line.getQuantity() <= 0 ? 1 : line.getQuantity();
+            int stock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+            if (stock < qty) {
+                throw new BusinessException("Insufficient stock for product: " + product.getName()
+                        + " (available: " + stock + ")");
+            }
             qtyByProduct.put(product.getProductId(), qty);
             products.put(product.getProductId(), product);
             total = total.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
@@ -155,6 +160,14 @@ public class RedemptionService {
         }
 
         BigDecimal finalAmount = total.subtract(discount).setScale(2, RoundingMode.HALF_UP);
+
+        // Decrement stock for each purchased product
+        for (Map.Entry<Long, Integer> entry : qtyByProduct.entrySet()) {
+            Product product = products.get(entry.getKey());
+            int currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+            product.setStockQuantity(Math.max(0, currentStock - entry.getValue()));
+            productRepository.save(product);
+        }
 
         Order order = new Order();
         order.setCustomer(customer);

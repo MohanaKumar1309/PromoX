@@ -44,6 +44,7 @@ public class CatalogService {
         product.setSku(request.getSku());
         product.setPrice(request.getPrice());
         product.setImageUrl(request.getImageUrl());
+        product.setStockQuantity(request.getStockQuantity() != null ? request.getStockQuantity() : 0);
 
         Product saved = productRepository.save(product);
         auditLogService.logAction(actorUserId, "PRODUCT_CREATE", "Created productId=" + saved.getProductId());
@@ -101,6 +102,7 @@ public class CatalogService {
                 .sku(product.getSku())
                 .price(product.getPrice())
                 .imageUrl(product.getImageUrl())
+                .stockQuantity(product.getStockQuantity())
                 .build();
     }
 }
