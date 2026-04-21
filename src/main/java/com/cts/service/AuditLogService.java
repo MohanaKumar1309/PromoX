@@ -7,6 +7,8 @@ import com.cts.entity.AuditLog;
 import com.cts.repository.AuditLogRepository;
 import com.cts.repository.InternalUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,6 +32,11 @@ public class AuditLogService {
 
     public List<AuditLogGetDto> getAll() {
         return auditLogRepository.findAllByOrderByTimestampDesc().stream().map(this::toDto).toList();
+    }
+
+    public Page<AuditLogGetDto> getPage(int page, int size) {
+        return auditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
     private AuditLogGetDto toDto(AuditLog auditLog) {

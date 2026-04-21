@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 @Builder
 public class OrderHistoryDto {
     private Long orderId;
+    private String customerName;
+    private String customerEmail;
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;

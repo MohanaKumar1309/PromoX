@@ -65,6 +65,24 @@ public class CatalogService {
                 .toList();
     }
 
+    public ProductGetDto updateProduct(Long productId, CreateProductRequest request, Long actorUserId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        product.setCategory(category);
+        product.setName(request.getName());
+        product.setSku(request.getSku());
+        product.setPrice(request.getPrice());
+        if (request.getImageUrl() != null) product.setImageUrl(request.getImageUrl());
+        if (request.getStockQuantity() != null) product.setStockQuantity(request.getStockQuantity());
+
+        Product saved = productRepository.save(product);
+        auditLogService.logAction(actorUserId, "PRODUCT_UPDATE", "Updated productId=" + saved.getProductId());
+        return toProductDto(saved);
+    }
+
     public void deleteProduct(Long productId, Long actorUserId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));

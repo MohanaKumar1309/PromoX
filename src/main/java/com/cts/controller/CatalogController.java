@@ -67,6 +67,20 @@ public class CatalogController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/products/{productId}")
+    public ResponseEntity<ApiResponse<ProductGetDto>> updateProduct(
+            @PathVariable Long productId,
+            @Valid @RequestBody CreateProductRequest request,
+            Authentication authentication) {
+        Long actorUserId = authContextService.currentInternalUser(authentication).getUserId();
+        return ResponseEntity.ok(ApiResponse.<ProductGetDto>builder()
+                .success(true)
+                .message("Product updated")
+                .data(catalogService.updateProduct(productId, request, actorUserId))
+                .build());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/products/{productId}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long productId, Authentication authentication) {
         Long actorUserId = authContextService.currentInternalUser(authentication).getUserId();

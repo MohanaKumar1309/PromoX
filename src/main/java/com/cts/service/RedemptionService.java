@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -100,7 +103,9 @@ public class RedemptionService {
             if (!applies) {
                 continue;
             }
-            if (promotion.getMinQuantity() != null && totalQuantity < promotion.getMinQuantity()) {
+            // BOGO promotions require only 1 item — skip minQuantity check for BOGO
+            if (promotion.getDiscountType() != com.cts.enums.DiscountType.BOGO
+                    && promotion.getMinQuantity() != null && totalQuantity < promotion.getMinQuantity()) {
                 continue;
             }
 
@@ -209,6 +214,23 @@ public class RedemptionService {
                         .createdAt(r.getCreatedAt())
                         .build())
                 .toList();
+    }
+
+    public Page<OrderHistoryDto> getAllOrdersAdmin(int page, int size) {
+        return redemptionRepository.findAll(
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .map(r -> OrderHistoryDto.builder()
+                        .orderId(r.getOrder() != null ? r.getOrder().getOrderId() : null)
+                        .customerName(r.getCustomer() != null ? r.getCustomer().getName() : "Unknown")
+                        .customerEmail(r.getCustomer() != null ? r.getCustomer().getEmail() : "")
+                        .totalAmount(r.getFinalAmount().add(r.getDiscountAmount()))
+                        .discountAmount(r.getDiscountAmount())
+                        .finalAmount(r.getFinalAmount())
+                        .appliedPromotions(r.getPromotionIds())
+                        .appliedCampaigns(r.getCampaignIds())
+                        .appliedCoupon(r.getCouponCode())
+                        .createdAt(r.getCreatedAt())
+                        .build());
     }
 
     private BigDecimal applyDiscount(BigDecimal base, DiscountType type, BigDecimal value, BigDecimal cap) {
