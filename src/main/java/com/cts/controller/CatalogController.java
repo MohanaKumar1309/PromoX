@@ -14,8 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/catalog")
@@ -23,6 +30,26 @@ import java.util.List;
 public class CatalogController {
     private final CatalogService catalogService;
     private final AuthContextService authContextService;
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = "/products/upload-image", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<String>> uploadProductImage(
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String original = file.getOriginalFilename();
+        String ext = (original != null && original.contains("."))
+                ? original.substring(original.lastIndexOf('.'))
+                : ".jpg";
+        String fileName = UUID.randomUUID() + ext;
+        Path uploadDir = Paths.get("uploads/products");
+        Files.createDirectories(uploadDir);
+        Files.copy(file.getInputStream(), uploadDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+        String imageUrl = "http://localhost:8082/uploads/products/" + fileName;
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .success(true)
+                .message("Image uploaded")
+                .data(imageUrl)
+                .build());
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/categories")
